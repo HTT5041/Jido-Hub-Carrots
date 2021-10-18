@@ -1,16 +1,13 @@
 import com.hazion.api.Blocks;
 import com.hazion.api.Game;
-import com.hazion.api.Hotbar;
 import com.hazion.api.Inventory;
 import com.hazion.api.hypixel.skyblock.SkyBlock;
-import com.hazion.api.hypixel.skyblock.SkyBlockAreas;
 import com.hazion.api.hypixel.skyblock.SkyBlockBazaar;
 import com.hazion.api.input.Camera;
 import com.hazion.api.input.Input;
 import com.hazion.api.pathing.Movement;
 import com.hazion.api.peer.network.chat.Component;
 import com.hazion.api.peer.world.level.block.state.BlockState;
-import com.hazion.api.peer.world.player.Player;
 import com.hazion.api.script.Script;
 import com.hazion.api.script.Manifest;
 import com.hazion.api.utils.PlayerHelper;
@@ -19,10 +16,8 @@ import com.hazion.api.world.blocks.BlockPos;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.Instant;
-import java.util.Objects;
 
-@Manifest(name = "Hub Carrots test", author = "HTT5041", version = 1.6, description = "farm da carrot")
+@Manifest(name = "Hub Carrots", author = "HTT5041", version = 1.1, description = "Farm da carrot in da Hub")
 public class HubCarrots implements Script {
 
     BlockPos farm1 = new BlockPos(-4, 69, 8);
@@ -90,7 +85,6 @@ public class HubCarrots implements Script {
         String chat_message = component.getString();
         if(chat_message.contains("[Bazaar]")){
             shouldCollect = true;
-            System.out.println("Received Bazaar trigger");
         }
         if(chat_message.equals("Somehow, there was nothing to claim!")){
             failedClaim = true;
@@ -157,10 +151,10 @@ public class HubCarrots implements Script {
                         return 500;
                     }
                     if (SkyBlockBazaar.isCategoryScreen()) {
+                        SkyBlockBazaar.selectCategory(SkyBlockBazaar.Category.FARMING);
                         SkyBlockBazaar.selectSubcategory("Carrot");
                         return 500;
                     }
-                    SkyBlockBazaar.selectCategory(SkyBlockBazaar.Category.FARMING);
                     return 500;
 
                 }
@@ -193,41 +187,26 @@ public class HubCarrots implements Script {
             }
         }
 
-        if((PlayerHelper.playerFeet().distance(farm1) < 1 || PlayerHelper.playerFeet().distance(farm2) < 1 || PlayerHelper.playerFeet().distance(farm3) < 1 || PlayerHelper.playerFeet().distance(farm4) < 1 || PlayerHelper.playerFeet().distance(farm5) < 1) && counter <= 10){
+        if(currentFarm == farms.length){
+            currentFarm = 0;
+            Game.sendChatMessage("/warp home");
+            return 2000;
+        }
+
+        if(PlayerHelper.playerFeet().distance(farms[currentFarm]) < 2 && counter <= 10) {
             BlockState carrot = Blocks.getClosest(z -> z.getName().equals("Carrots"), 20);
-            if(carrot != null){
+            if (carrot != null) {
                 BlockPos carrotBlock = carrot.getBlockPosition();
                 Input.CLICK_LEFT.setHoldingDown(true);
                 Camera.smoothTurn(carrotBlock);
                 counter++;
-                if(counter == 10){
+                if (counter == 10) {
                     Input.CLICK_LEFT.setHoldingDown(false);
                     currentFarm++;
                     return 100;
                 }
                 return 50;
-//                if(counter == 10){
-//                    Input.CLICK_LEFT.setHoldingDown(false);
-//                    counter = 0;
-//                    if(PlayerHelper.playerFeet().distance(farms[currentFarm]) < 1){
-//                        currentFarm++;
-//                        if(currentFarm == farms.length) {
-//                            Game.sendChatMessage("/warp home");
-//                            return 2000;
-//                        } else {
-//                            Movement.walkTo(farms[currentFarm]);
-//                            return 1000;
-//                        }
-//                    }
-//                } else {
-//                    return 50;
-//                }
             }
-        }
-        if(currentFarm == farms.length){
-            currentFarm = 0;
-            Game.sendChatMessage("/warp home");
-            return 2000;
         }
         Movement.walkTo(farms[currentFarm]);
         counter = 0;
